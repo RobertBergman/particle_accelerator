@@ -90,6 +90,8 @@ set(PAS_SOURCES
     src/physics/EMField.cpp
     src/physics/Integrator.cpp
     src/physics/ParticleSystem.cpp
+    src/accelerator/Component.cpp
+    src/accelerator/Accelerator.cpp
 )
 
 set(PAS_HEADERS
@@ -100,6 +102,8 @@ set(PAS_HEADERS
     src/physics/EMField.hpp
     src/physics/Integrator.hpp
     src/physics/ParticleSystem.hpp
+    src/accelerator/Component.hpp
+    src/accelerator/Accelerator.hpp
 )
 
 # Main executable
@@ -145,12 +149,16 @@ if(PAS_BUILD_TESTS)
         tests/physics/test_emfield.cpp
         tests/physics/test_integrator.cpp
         tests/physics/test_particlesystem.cpp
+        tests/accelerator/test_component.cpp
+        tests/accelerator/test_accelerator.cpp
         src/utils/Logger.cpp
         src/utils/Timer.cpp
         src/physics/Particle.cpp
         src/physics/EMField.cpp
         src/physics/Integrator.cpp
         src/physics/ParticleSystem.cpp
+        src/accelerator/Component.cpp
+        src/accelerator/Accelerator.cpp
     )
 
     add_executable(pas_tests ${PAS_TEST_SOURCES})
