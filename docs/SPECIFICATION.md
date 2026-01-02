@@ -2459,48 +2459,69 @@ private:
   "title": "Particle Accelerator Simulation Configuration",
   "type": "object",
   "properties": {
+    "schemaVersion": { "type": "integer", "minimum": 1, "default": 1 },
     "application": {
       "type": "object",
       "properties": {
-        "windowTitle": { "type": "string" },
-        "windowWidth": { "type": "integer", "minimum": 800 },
-        "windowHeight": { "type": "integer", "minimum": 600 },
-        "fullscreen": { "type": "boolean" },
-        "vsync": { "type": "boolean" },
-        "targetFPS": { "type": "integer", "minimum": 30, "maximum": 240 }
-      }
+        "windowTitle": { "type": "string", "default": "Particle Accelerator Simulation" },
+        "windowWidth": { "type": "integer", "minimum": 800, "default": 1920 },
+        "windowHeight": { "type": "integer", "minimum": 600, "default": 1080 },
+        "fullscreen": { "type": "boolean", "default": false },
+        "vsync": { "type": "boolean", "default": true },
+        "targetFPS": { "type": "integer", "minimum": 30, "maximum": 240, "default": 60 }
+      },
+      "additionalProperties": false
     },
     "physics": {
       "type": "object",
       "properties": {
-        "timeStep": { "type": "number", "minimum": 1e-15 },
-        "substeps": { "type": "integer", "minimum": 1 },
+        "timeStep": { "type": "number", "minimum": 1e-15, "default": 1e-12 },
+        "substeps": { "type": "integer", "minimum": 1, "default": 1 },
         "integratorType": {
           "type": "string",
-          "enum": ["Euler", "VelocityVerlet", "RK4", "Boris", "RK45"]
+          "enum": ["Euler", "VelocityVerlet", "RK4", "Boris", "RK45"],
+          "default": "Boris"
         },
-        "relativisticCorrections": { "type": "boolean" },
-        "spaceChargeEnabled": { "type": "boolean" }
-      }
+        "relativisticCorrections": { "type": "boolean", "default": true },
+        "spaceChargeEnabled": { "type": "boolean", "default": false },
+        "spaceChargeFactor": { "type": "number", "minimum": 0, "default": 1.0 },
+        "rk45": {
+          "type": "object",
+          "properties": {
+            "tolerance": { "type": "number", "minimum": 0, "default": 1e-9 },
+            "minStep": { "type": "number", "minimum": 1e-15, "default": 1e-15 },
+            "maxStep": { "type": "number", "minimum": 0, "default": 1e-6 },
+            "safetyFactor": { "type": "number", "minimum": 0.1, "maximum": 1.0, "default": 0.9 }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
     },
     "beam": {
       "type": "object",
       "properties": {
         "particleType": {
           "type": "string",
-          "enum": ["Electron", "Positron", "Proton", "Antiproton", "Custom"]
+          "enum": ["Electron", "Positron", "Proton", "Antiproton", "Custom"],
+          "default": "Proton"
         },
-        "numParticles": { "type": "integer", "minimum": 1 },
+        "numParticles": { "type": "integer", "minimum": 1, "default": 1000 },
         "kineticEnergy": { "type": "number", "minimum": 0 },
-        "energySpread": { "type": "number", "minimum": 0, "maximum": 1 },
+        "energySpread": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.001 },
         "emittanceX": { "type": "number", "minimum": 0 },
         "emittanceY": { "type": "number", "minimum": 0 },
         "bunchLength": { "type": "number", "minimum": 0 },
         "distribution": {
           "type": "string",
-          "enum": ["Uniform", "Gaussian", "Waterbag", "KV"]
-        }
-      }
+          "enum": ["Uniform", "Gaussian", "Waterbag", "KV"],
+          "default": "Gaussian"
+        },
+        "position": { "$ref": "#/definitions/vector3" },
+        "direction": { "$ref": "#/definitions/vector3" },
+        "randomSeed": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
     },
     "accelerator": {
       "type": "object",
@@ -2511,27 +2532,84 @@ private:
           "enum": ["Linear", "Circular", "Custom"]
         },
         "circumference": { "type": "number", "minimum": 0 },
+        "totalLength": { "type": "number", "minimum": 0 },
         "designEnergy": { "type": "number", "minimum": 0 },
+        "particleType": {
+          "type": "string",
+          "enum": ["Electron", "Positron", "Proton", "Antiproton", "Custom"]
+        },
         "components": {
           "type": "array",
           "items": { "$ref": "#/definitions/component" }
         }
-      }
+      },
+      "additionalProperties": false
     },
     "rendering": {
       "type": "object",
       "properties": {
+        "enableMSAA": { "type": "boolean" },
         "msaaSamples": { "type": "integer", "enum": [1, 2, 4, 8] },
         "enableBloom": { "type": "boolean" },
         "enableSSAO": { "type": "boolean" },
+        "enableShadows": { "type": "boolean" },
         "showGrid": { "type": "boolean" },
+        "showAxes": { "type": "boolean" },
+        "showStats": { "type": "boolean" },
         "backgroundColor": { "$ref": "#/definitions/color3" },
+        "ambientLight": { "$ref": "#/definitions/color3" },
         "particleSize": { "type": "number", "minimum": 0.001 },
+        "minSize": { "type": "number", "minimum": 0 },
+        "maxSize": { "type": "number", "minimum": 0 },
+        "sizeByEnergy": { "type": "boolean" },
+        "colorByEnergy": { "type": "boolean" },
         "showTrails": { "type": "boolean" },
-        "trailLength": { "type": "integer", "minimum": 0 }
-      }
+        "trailLength": { "type": "integer", "minimum": 0 },
+        "trailFade": { "type": "number", "minimum": 0, "maximum": 1 },
+        "lowEnergyColor": { "$ref": "#/definitions/color3" },
+        "highEnergyColor": { "$ref": "#/definitions/color3" },
+        "bloomIntensity": { "type": "number", "minimum": 0 },
+        "billboardParticles": { "type": "boolean" },
+        "maxRenderedParticles": { "type": "integer", "minimum": 1 },
+        "fieldVisualization": {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "type": "string",
+              "enum": ["None", "Arrows", "Streamlines", "ColorMap", "ContourLines"]
+            },
+            "showElectric": { "type": "boolean" },
+            "showMagnetic": { "type": "boolean" },
+            "gridResolutionX": { "type": "integer", "minimum": 1 },
+            "gridResolutionY": { "type": "integer", "minimum": 1 },
+            "gridResolutionZ": { "type": "integer", "minimum": 1 },
+            "arrowScale": { "type": "number", "minimum": 0 },
+            "arrowMaxLength": { "type": "number", "minimum": 0 },
+            "slicePlaneNormal": { "$ref": "#/definitions/vector3" },
+            "slicePlaneOffset": { "type": "number" },
+            "electricColor": { "$ref": "#/definitions/color3" },
+            "magneticColor": { "$ref": "#/definitions/color3" }
+          },
+          "additionalProperties": false
+        },
+        "camera": {
+          "type": "object",
+          "properties": {
+            "fov": { "type": "number", "minimum": 1, "maximum": 179 },
+            "nearPlane": { "type": "number", "minimum": 0.0001 },
+            "farPlane": { "type": "number", "minimum": 1 },
+            "moveSpeed": { "type": "number", "minimum": 0 },
+            "rotateSpeed": { "type": "number", "minimum": 0 },
+            "zoomSpeed": { "type": "number", "minimum": 0 },
+            "orbitDistance": { "type": "number", "minimum": 0 }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
     }
   },
+  "additionalProperties": false,
   "definitions": {
     "color3": {
       "type": "array",
@@ -2546,19 +2624,109 @@ private:
       "maxItems": 3
     },
     "component": {
+      "oneOf": [
+        { "$ref": "#/definitions/beamPipe" },
+        { "$ref": "#/definitions/dipole" },
+        { "$ref": "#/definitions/quadrupole" },
+        { "$ref": "#/definitions/rfCavity" },
+        { "$ref": "#/definitions/detector" },
+        { "$ref": "#/definitions/drift" }
+      ]
+    },
+    "beamPipe": {
       "type": "object",
       "properties": {
-        "type": {
-          "type": "string",
-          "enum": ["BeamPipe", "Dipole", "Quadrupole", "RFCavity", "Detector", "Drift"]
-        },
+        "type": { "const": "BeamPipe" },
+        "name": { "type": "string" },
+        "position": { "$ref": "#/definitions/vector3" },
+        "rotation": { "$ref": "#/definitions/vector3" },
+        "length": { "type": "number", "minimum": 0 },
+        "innerRadius": { "type": "number", "minimum": 0 },
+        "outerRadius": { "type": "number", "minimum": 0 },
+        "aperture": { "type": "number", "minimum": 0 }
+      },
+      "required": ["type", "length"],
+      "additionalProperties": false
+    },
+    "dipole": {
+      "type": "object",
+      "properties": {
+        "type": { "const": "Dipole" },
+        "name": { "type": "string" },
+        "position": { "$ref": "#/definitions/vector3" },
+        "rotation": { "$ref": "#/definitions/vector3" },
+        "length": { "type": "number", "minimum": 0 },
+        "aperture": { "type": "number", "minimum": 0 },
+        "field": { "type": "number" },
+        "bendingAngle": { "type": "number" },
+        "gapHeight": { "type": "number", "minimum": 0 },
+        "width": { "type": "number", "minimum": 0 },
+        "useAngle": { "type": "boolean" },
+        "referenceEnergy": { "type": "number", "minimum": 0 }
+      },
+      "required": ["type", "length"],
+      "additionalProperties": false
+    },
+    "quadrupole": {
+      "type": "object",
+      "properties": {
+        "type": { "const": "Quadrupole" },
+        "name": { "type": "string" },
+        "position": { "$ref": "#/definitions/vector3" },
+        "rotation": { "$ref": "#/definitions/vector3" },
+        "length": { "type": "number", "minimum": 0 },
+        "aperture": { "type": "number", "minimum": 0 },
+        "gradient": { "type": "number" },
+        "k1": { "type": "number" },
+        "useK1": { "type": "boolean" },
+        "focusing": { "type": "boolean" },
+        "referenceEnergy": { "type": "number", "minimum": 0 }
+      },
+      "required": ["type", "length"],
+      "additionalProperties": false
+    },
+    "rfCavity": {
+      "type": "object",
+      "properties": {
+        "type": { "const": "RFCavity" },
+        "name": { "type": "string" },
+        "position": { "$ref": "#/definitions/vector3" },
+        "rotation": { "$ref": "#/definitions/vector3" },
+        "length": { "type": "number", "minimum": 0 },
+        "aperture": { "type": "number", "minimum": 0 },
+        "voltage": { "type": "number", "minimum": 0 },
+        "frequency": { "type": "number", "minimum": 0 },
+        "phase": { "type": "number" },
+        "harmonicNumber": { "type": "integer", "minimum": 1 }
+      },
+      "required": ["type", "length"],
+      "additionalProperties": false
+    },
+    "detector": {
+      "type": "object",
+      "properties": {
+        "type": { "const": "Detector" },
         "name": { "type": "string" },
         "position": { "$ref": "#/definitions/vector3" },
         "rotation": { "$ref": "#/definitions/vector3" },
         "length": { "type": "number", "minimum": 0 },
         "aperture": { "type": "number", "minimum": 0 }
       },
-      "required": ["type"]
+      "required": ["type", "length"],
+      "additionalProperties": false
+    },
+    "drift": {
+      "type": "object",
+      "properties": {
+        "type": { "const": "Drift" },
+        "name": { "type": "string" },
+        "position": { "$ref": "#/definitions/vector3" },
+        "rotation": { "$ref": "#/definitions/vector3" },
+        "length": { "type": "number", "minimum": 0 },
+        "aperture": { "type": "number", "minimum": 0 }
+      },
+      "required": ["type", "length"],
+      "additionalProperties": false
     }
   }
 }
@@ -2568,6 +2736,7 @@ private:
 
 ```json
 {
+  "schemaVersion": 1,
   "application": {
     "windowTitle": "Particle Accelerator Simulation - LHC Mock",
     "windowWidth": 1920,
@@ -2581,7 +2750,8 @@ private:
     "substeps": 10,
     "integratorType": "Boris",
     "relativisticCorrections": true,
-    "spaceChargeEnabled": false
+    "spaceChargeEnabled": false,
+    "spaceChargeFactor": 1.0
   },
   "beam": {
     "particleType": "Proton",
@@ -2591,13 +2761,15 @@ private:
     "emittanceX": 3.75e-6,
     "emittanceY": 3.75e-6,
     "bunchLength": 0.075,
-    "distribution": "Gaussian"
+    "distribution": "Gaussian",
+    "randomSeed": 42
   },
   "accelerator": {
     "name": "Mock LHC",
     "type": "Circular",
     "circumference": 26659,
     "designEnergy": 7e12,
+    "particleType": "Proton",
     "components": [
       {
         "type": "Dipole",
@@ -2617,17 +2789,31 @@ private:
     ]
   },
   "rendering": {
+    "enableMSAA": true,
     "msaaSamples": 4,
     "enableBloom": true,
     "enableSSAO": false,
     "showGrid": true,
+    "showAxes": true,
     "backgroundColor": [0.02, 0.02, 0.05],
+    "ambientLight": [0.2, 0.2, 0.2],
     "particleSize": 0.05,
     "showTrails": true,
     "trailLength": 100
   }
 }
 ```
+
+### 10.3 Configuration Notes
+
+- All energy values in config are in eV; loader converts to Joules internally.
+- `beam.direction` should be normalized; if omitted, default is +Z.
+- `rendering.enableMSAA` defaults to true when `msaaSamples` > 1.
+- Dipoles: set either `field` (T) or `bendingAngle` (rad). When `useAngle` is true, compute field using `referenceEnergy`.
+- Quadrupoles: set either `gradient` (T/m) or `k1` (1/m^2). When `useK1` is true, compute gradient using `referenceEnergy`.
+- Component types supported in v1.0.0: `BeamPipe`, `Dipole`, `Quadrupole`, `RFCavity`, `Detector`, `Drift`.
+- For linear accelerators use `totalLength`; for circular use `circumference`.
+- Parsers should support a strict mode that rejects unknown keys and a permissive mode that logs and ignores them.
 
 ---
 
