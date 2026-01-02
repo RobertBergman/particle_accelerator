@@ -1,0 +1,34 @@
+{
+  "application": {
+    "name": "Particle Accelerator Simulation",
+    "version": "1.0.0",
+    "windowWidth": 1920,
+    "windowHeight": 1080,
+    "fullscreen": false,
+    "vsync": true
+  },
+  "physics": {
+    "timeStep": 1e-12,
+    "integratorType": "Boris",
+    "enableSpaceCharge": false
+  },
+  "beam": {
+    "particleType": "Proton",
+    "numParticles": 10000,
+    "kineticEnergy_eV": 7e12,
+    "distribution": "Gaussian",
+    "seed": 42
+  },
+  "accelerator": {
+    "type": "Circular",
+    "circumference": 26659,
+    "components": []
+  },
+  "rendering": {
+    "particleSize": 2.0,
+    "enableBloom": true,
+    "enableTrails": false,
+    "trailLength": 50,
+    "backgroundColor": [0.05, 0.05, 0.1]
+  }
+}
