@@ -65,6 +65,13 @@ FetchContent_Declare(
     GIT_TAG v1.14.0
 )
 
+# Dear ImGui - UI library
+FetchContent_Declare(
+    imgui
+    GIT_REPOSITORY https://github.com/ocornut/imgui.git
+    GIT_TAG v1.90.1
+)
+
 # Configure GLFW options
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
@@ -74,7 +81,35 @@ set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
 # Make dependencies available
-FetchContent_MakeAvailable(spdlog glm json glfw googletest)
+FetchContent_MakeAvailable(spdlog glm json glfw googletest imgui)
+
+# Find OpenGL
+find_package(OpenGL REQUIRED)
+
+# Create GLAD library (OpenGL loader)
+# We'll use embedded sources for simplicity
+add_library(glad STATIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/external/glad/src/glad.c
+)
+target_include_directories(glad PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/external/glad/include
+)
+
+# Create ImGui library
+add_library(imgui STATIC
+    ${imgui_SOURCE_DIR}/imgui.cpp
+    ${imgui_SOURCE_DIR}/imgui_demo.cpp
+    ${imgui_SOURCE_DIR}/imgui_draw.cpp
+    ${imgui_SOURCE_DIR}/imgui_tables.cpp
+    ${imgui_SOURCE_DIR}/imgui_widgets.cpp
+    ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
+    ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
+)
+target_include_directories(imgui PUBLIC
+    ${imgui_SOURCE_DIR}
+    ${imgui_SOURCE_DIR}/backends
+)
+target_link_libraries(imgui PRIVATE glfw OpenGL::GL)
 
 # Find OpenMP if enabled
 if(PAS_ENABLE_OPENMP)
@@ -90,8 +125,19 @@ set(PAS_SOURCES
     src/physics/EMField.cpp
     src/physics/Integrator.cpp
     src/physics/ParticleSystem.cpp
+    src/physics/PhysicsEngine.cpp
     src/accelerator/Component.cpp
     src/accelerator/Accelerator.cpp
+    src/core/Window.cpp
+    src/rendering/Shader.cpp
+    src/rendering/Camera.cpp
+    src/rendering/Mesh.cpp
+    src/rendering/ParticleRenderer.cpp
+    src/rendering/AcceleratorRenderer.cpp
+    src/rendering/Renderer.cpp
+    src/ui/ControlPanel.cpp
+    src/ui/BeamStatsPanel.cpp
+    src/config/Config.cpp
 )
 
 set(PAS_HEADERS
@@ -102,8 +148,20 @@ set(PAS_HEADERS
     src/physics/EMField.hpp
     src/physics/Integrator.hpp
     src/physics/ParticleSystem.hpp
+    src/physics/PhysicsEngine.hpp
     src/accelerator/Component.hpp
     src/accelerator/Accelerator.hpp
+    src/core/Window.hpp
+    src/rendering/Shader.hpp
+    src/rendering/Camera.hpp
+    src/rendering/Mesh.hpp
+    src/rendering/ParticleRenderer.hpp
+    src/rendering/AcceleratorRenderer.hpp
+    src/rendering/Renderer.hpp
+    src/ui/UIPanel.hpp
+    src/ui/ControlPanel.hpp
+    src/ui/BeamStatsPanel.hpp
+    src/config/Config.hpp
 )
 
 # Main executable
@@ -118,6 +176,9 @@ target_link_libraries(pas PRIVATE
     glm::glm
     nlohmann_json::nlohmann_json
     glfw
+    glad
+    imgui
+    OpenGL::GL
 )
 
 if(OpenMP_CXX_FOUND AND PAS_ENABLE_OPENMP)
@@ -149,22 +210,29 @@ if(PAS_BUILD_TESTS)
         tests/physics/test_emfield.cpp
         tests/physics/test_integrator.cpp
         tests/physics/test_particlesystem.cpp
+        tests/physics/test_physicsengine.cpp
         tests/accelerator/test_component.cpp
         tests/accelerator/test_accelerator.cpp
+        tests/rendering/test_camera.cpp
+        tests/rendering/test_mesh.cpp
         src/utils/Logger.cpp
         src/utils/Timer.cpp
         src/physics/Particle.cpp
         src/physics/EMField.cpp
         src/physics/Integrator.cpp
         src/physics/ParticleSystem.cpp
+        src/physics/PhysicsEngine.cpp
         src/accelerator/Component.cpp
         src/accelerator/Accelerator.cpp
+        src/rendering/Camera.cpp
+        src/rendering/Mesh.cpp
     )
 
     add_executable(pas_tests ${PAS_TEST_SOURCES})
 
     target_include_directories(pas_tests PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src
+        ${CMAKE_CURRENT_SOURCE_DIR}/external/glad/include
     )
 
     target_link_libraries(pas_tests PRIVATE
@@ -172,6 +240,8 @@ if(PAS_BUILD_TESTS)
         GTest::gtest_main
         spdlog::spdlog
         glm::glm
+        glad
+        OpenGL::GL
     )
 
     include(GoogleTest)

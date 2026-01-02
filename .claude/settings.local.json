@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir:*)",
+      "Bash(cmake:*)",
+      "Bash(ctest:*)",
+      "Bash(D:/Projects/particle_accelerator/build/bin/Release/pas.exe)",
+      "Bash(git add:*)",
+      "Bash(git push)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nPhase 2: Core Physics Domain implementation\n\n- Implement Particle class with relativistic calculations\n  \\(gamma, beta, kinetic/total energy, momentum\\)\n- Implement FieldSource interface with concrete implementations:\n  - UniformBField for dipole magnets\n  - QuadrupoleField for focusing elements\n  - RFField for RF cavities\n- Implement EMFieldManager as composite field container\n- Implement numerical integrators \\(Strategy Pattern\\):\n  - EulerIntegrator \\(1st order, reference only\\)\n  - VelocityVerletIntegrator \\(2nd order, symplectic\\)\n  - BorisIntegrator \\(2nd order, phase-space preserving\\)\n  - RK4Integrator \\(4th order, high accuracy\\)\n- Implement ParticleSystem for beam generation and statistics\n- Add comprehensive physics tests \\(120 tests passing\\)\n  - Cyclotron motion validation\n  - Energy conservation in B-fields\n  - Relativistic calculations verified against LHC parameters\nEOF\n\\)\")",
+      "Bash(git commit:*)"
+    ]
+  }
+}
